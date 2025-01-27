@@ -32,7 +32,7 @@ setup(
     python_requires=">=3.8",
     description = 'Direct Step Edge Detection',
     long_description=get_contents('README.md'),
-    long_description_content_type='text/x-md',
+    long_description_content_type='text/markdown',
     version=get_init_property('__version__'),
     author=get_init_property('__author__'),
     author_email=get_init_property('__email__'),
