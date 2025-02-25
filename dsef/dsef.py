@@ -144,9 +144,9 @@ class Dsef:
         diag = math.hypot(self.width, self.height)
 
         step_mapping = {
-            "high": [dist / 20.0/2, diag / 200.0],
+            "low": [dist / 20.0/2, diag / 200.0],
             "medium": [dist / 30.0/2, diag / 100.0],
-            "low": [dist / 40.0/2, diag / 50.0]
+            "high": [dist / 40.0/2, diag / 50.0]
         }
         search_step, follower_step = step_mapping.get(self.speed, [dist / 30.0/2, diag / 100.0])
         if self.debug:
