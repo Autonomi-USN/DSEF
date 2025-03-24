@@ -70,6 +70,8 @@ def calc_heading(heading_vec: Tuple[float]) -> float:
     Returns:
         float: The compass heading in degrees, ranging from 0° to 360°.
     """
+    if len(heading_vec) != 2:
+        raise TypeError("heading_vec is not a Tuple of len 2")
     ve, vn = heading_vec    
     return (np.degrees(np.arctan2(ve, vn)) + 360) % 360.0
 
