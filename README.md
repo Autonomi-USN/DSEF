@@ -1,6 +1,17 @@
+<h1 align="center">
+    <img alt="DSEF" ttle="DSEF" src="https://github.com/Autonomi-USN/DSEF/tree/main/assets/dsef_logo.png?s=200&v=4" />
+    <p>Direct Step Edge Follower</p>
+</h1>
+
+![ci build](https://github.com/Autonomi-USN/DSEF/actions/workflows/pypi-publish.yml/badge.svg)
+![Python Version](https://img.shields.io/pypi/pyversions/dsef)
+![Downloads](https://img.shields.io/pypi/dm/dsef)
+![PyPI - License](https://img.shields.io/pypi/l/dsef)
+[![PyPI version](https://badge.fury.io/py/dsef.svg)](https://badge.fury.io/py/dsef)
+
 # DSEF Package
 
-Direct Step Edge Follower package
+The Direct Step Edge Follower (DSEF) is a edge-following algorithm designed for high-precision edge detection with low computational cost. It employs stepwise directional refinement and kernel-based statistical testing to enhance accuracy, particularly in challenging lighting conditions.
 
 ## How to use
 
