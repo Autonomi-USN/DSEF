@@ -179,7 +179,7 @@ class Dsef:
         MAX_EDGE = 0
         u_edge, v_edge = start_x, start_y
         EDGE_FOUND = False
-
+        image = img
         while True:
             if not self.E.step(search_step * v_heading[0], search_step * v_heading[1]):
                 if self.debug:
@@ -187,16 +187,16 @@ class Dsef:
                 break
 
             ui, vi = self.E.get_pos()
-            image = cv2.circle(img,(int(ui),int(vi)),1,(0,0,0),-1)
+            image = cv2.circle(image,(int(ui),int(vi)),1,(0,0,0),-1)
             T_FULL_main = dftools.dsef_test(self.E, self.E.u, self.E.v, self.E.edge_direction, FULL=True).FULL or 0
             if T_FULL_main > self.E.crit_edge:
                 if T_FULL_main > MAX_EDGE + self.E.crit_edge:
                     MAX_EDGE = T_FULL_main
                     u_edge, v_edge = ui, vi
-                    image = cv2.circle(img,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
                 elif MAX_EDGE > 0 and T_FULL_main < MAX_EDGE - self.E.crit_edge:
                     self.E.move(u_edge, v_edge)
-                    image = cv2.circle(img,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
                     EDGE_FOUND = True
                     if self.debug:
                         print("[DEBUG] Edge found. Breaking EdgeSearch.")

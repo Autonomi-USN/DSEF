@@ -24,6 +24,10 @@ class DSEFBase:
     """
     def __init__(self, im: np.ndarray, edge_direction: float, dir_span: int = 90, t_crit: float = None,
                  dtype: np.dtype = np.float64, force_dtheta: float = None):
+        
+        if im is None:
+            raise ValueError("No Image is being processed")
+        
         self.dtype=dtype
         # Initialize the directional step edge filter bank
         self.DF                = dftools.DsefFilters(edge_direction=edge_direction, dir_span=dir_span, force_dtheta=force_dtheta)
@@ -31,6 +35,8 @@ class DSEFBase:
         # Pad image
         # PS! numpy arrays are row major
         self.upad, self.vpad   = math.ceil(self.DF.R+self.DF.radius), math.ceil(self.DF.R+self.DF.radius)
+        self.u_float           = 0.0
+        self.v_float           = 0.0
         self.Nv, self.Nu       = im.shape[0:2]  # TODO: Check that this is correct
         self.im_pad            = np.pad(im, (self.vpad, self.upad))
         self.mask_pad          = np.pad(np.ones_like(im),(self.vpad, self.upad))
@@ -74,6 +80,9 @@ class DSEFBase:
         Returns:
             bool: True if the step was successful, False if the new position is out of bounds.
         """
+        if type(du) not in [float, int, np.float64] or\
+            type(dv) not in [float, int, np.float64]:
+            raise ValueError(f"Wrong datatype!")
         return self.move(self.u_float + du - self.upad, self.v_float + dv - self.vpad)
     
     def move(self, u: float, v: float) -> bool:
@@ -87,6 +96,9 @@ class DSEFBase:
         Returns:
             bool: True if the move was successful (i.e., within bounds), False otherwise.
         """
+        if type(u) not in [float, int, np.float64] or\
+            type(v) not in [float, int, np.float64]:
+            raise ValueError("Wrong datatype!")
         u_new = round(u + self.upad)
         v_new = round(v + self.vpad)
         if not self._within_bounds(u_new, v_new):
@@ -117,7 +129,7 @@ class DSEFBase:
         # Get span
         sel_dirs, sel_items, sel_dirvecs = self.DF.flut.get_span()
         # Calculate T_FORWARD for current flut span
-        t = [dftools.dsef_test(self, self.u, self.v, direction, edge_direction = 0, FORWARD=True).FORWARD for direction in sel_dirs]    
+        t = [dftools.dsef_test(self, self.u, self.v, direction, FORWARD=True).FORWARD for direction in sel_dirs]    
         # Find best direction to follow
         ind_max = np.argmax(t)
         if (t[ind_max] < t[len(sel_dirs)//2] + self.crit_edge):  # Stay on previous track
@@ -155,15 +167,18 @@ class DSEFBase:
         d              = (v_dir[0]**2 + v_dir[1]**2)**0.5
         v_heading      = [v_dir[0]/d, v_dir[1]/d]
 
+        EDGE = False
         MAX_EDGE = 0
         v = v_dir
+
+        image = img
 
         while v_heading[0]*v[0] + v_heading[1]*v[1] > 0:       # until we have passed the stop point
             
             if not self.step(step*v_heading[0], step*v_heading[1]):
                 break
             u_new, v_new = self.get_pos()
-            image = cv2.circle(img,(int(u_new),int(v_new)),1,(0,0,0),-1)
+            image = cv2.circle(image,(int(u_new),int(v_new)),1,(0,0,0),-1)
             
             if OPTIMIZE_SEARCH_DIRECTION:
                 self.edge_direction = self.find_best_direction()
@@ -176,16 +191,16 @@ class DSEFBase:
                 if T_FULL > MAX_EDGE + self.crit_edge:
                     MAX_EDGE = T_FULL
                     u_edge, v_edge = u_new, v_new
-                    image = cv2.circle(img,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
                 elif MAX_EDGE > 0 and T_FULL < MAX_EDGE - self.crit_edge:
                     # Edge found !!!
                     self.move(u_edge, v_edge)                    
-                    image = cv2.circle(img,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
                     break
                 
             # Calculate vector from current position to end of profile
             v = [stop[0]-u_new, stop[1]-v_new]  
-            image = cv2.circle(img,(int(u_edge),int(v_edge)),3,(0,0,0),-1)      
+            image = cv2.circle(image,(int(u_edge),int(v_edge)),3,(0,0,0),-1)      
         return EDGE, self.get_pos(), image
     
     def EdgeFollow(self, follower_step: float, img: np.ndarray, MAX_ITT: int = 1000, Ntest_edge: int = 2):
@@ -220,10 +235,12 @@ class DSEFBase:
         arrow_list_follow = []  # We'll store arrow info for each iteration
         Nitt = 0
 
+        image = img
+
         while Nitt < MAX_ITT:
             Nitt += 1
             ui, vi = self.get_pos()
-            image = cv2.circle(img,(int(ui),int(vi)),1,(128,128,128),-1)
+            image = cv2.circle(image,(int(ui),int(vi)),1,(128,128,128),-1)
             us_.append(ui)
             vs_.append(vi)
 
@@ -275,7 +292,8 @@ class DSEFBase:
             # move filter forward
             if not self.step(v[0]*step, v[1]*step):
                 message = "we reached END of image"
+                END_FOUND = True
                 break
-
+            
         return EDGE_FOUND, END_FOUND, REWA, message, us_, vs_, arrow_list_follow, image
     

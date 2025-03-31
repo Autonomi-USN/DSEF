@@ -496,9 +496,9 @@ def dsef_test(
     """
     T = DataClass()
     if USE_LUT:
-        theta, (RU, RD, LU, LD), _ = E.DF.flut.get_nearest(direction)
+        _, (RU, RD, LU, LD), _ = E.DF.flut.get_nearest(direction)
     else: 
-        theta, (RU, RD, LU, LD), _ = E.DF._calc_regs(direction)  
+        _, (RU, RD, LU, LD), _ = E.DF._calc_regs(direction)  
 
     # Full edge test
     if FULL:
