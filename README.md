@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img alt="DSEF" ttle="DSEF" src="https://github.com/Autonomi-USN/DSEF/tree/main/assets/dsef_logo.png?s=200&v=4" />
+    <img alt="DSEF" ttle="DSEF" src="https://raw.githubusercontent.com/Autonomi-USN/DSEF/refs/heads/main/assets/dsef_logo.png?s=200&v=4" />
     <p>Direct Step Edge Follower</p>
 </h1>
 
