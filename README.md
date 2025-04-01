@@ -11,7 +11,23 @@
 
 # DSEF Package
 
-The Direct Step Edge Follower (DSEF) is a edge-following algorithm designed for high-precision edge detection with low computational cost. It employs stepwise directional refinement and kernel-based statistical testing to enhance accuracy, particularly in challenging lighting conditions.
+The [Direct Step Edge Follower (DSEF)](https://www.researchgate.net/publication/390370984_Direct_Step_Edge_Follower_a_novel_edge_follower_algorithm_applied_to_solar_panels_inspections_with_Unmanned_Aerial_Vehicles) is a edge-following algorithm designed for high-precision edge detection with low computational cost. It employs stepwise directional refinement and kernel-based statistical testing to enhance accuracy, particularly in challenging lighting conditions.
+
+## Citation
+
+To cite DSEF in your research, please cite as:
+
+```bibtex
+@article{Sivertsen2025DSEF,
+  author    = {Agnar Sivertsen and Fabio A. A. Andrade and Marcos Moura and Carlos A. M. Correia and Mariane R. Petraglia},
+  title     = {Direct Step Edge Follower: a novel edge follower algorithm applied to solar panels inspections with Unmanned Aerial Vehicles},
+  journal   = {Preprint},
+  year      = {2025},
+  month     = {April},
+  url       = {https://www.researchgate.net/publication/390370984_Direct_Step_Edge_Follower_a_novel_edge_follower_algorithm_applied_to_solar_panels_inspections_with_Unmanned_Aerial_Vehicles}
+}
+
+```
 
 ## How to use
 
