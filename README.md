@@ -47,7 +47,7 @@ plt.axis('off')  # Hide the axes
 plt.show()
 ```
 
-![png](docs/readme_imgs/img1.png)
+![png](https://raw.githubusercontent.com/Autonomi-USN/DSEF/refs/heads/main/docs/readme_imgs/img1.png)
 
 **Initiate DSEF Class**
 
@@ -90,7 +90,7 @@ plt.show()
     [DEBUG] Edge found. Breaking EdgeSearch.
     Edge found: True
 
-![png](docs/readme_imgs/img2.png)
+![png](https://raw.githubusercontent.com/Autonomi-USN/DSEF/refs/heads/main/docs/readme_imgs/img2.png)
 
 **Edge Follow**
 
@@ -119,4 +119,4 @@ plt.show()
     [DEBUG] EdgeFollow message: CANCEL. WE LOST THE EDGE
     Found edge line [(x1,y1),(x2,y2)]: [(522, 380), (-17152.38437246058, 3496.470832276853)]
 
-![png](docs/readme_imgs/img3.png)
+![png](https://raw.githubusercontent.com/Autonomi-USN/DSEF/refs/heads/main/docs/readme_imgs/img3.png)
