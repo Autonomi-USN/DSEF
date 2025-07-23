@@ -38,6 +38,8 @@ def get_t_critical(df: int = 10, p: float = 0.001) -> float:
     Returns:
         float: Critical value for the given t-test parameters.
     """
+    if int(df) != df:
+        raise ValueError(f"'df' must be integer, got: {df}")
     return stats.t.ppf(1 - p, df)
 
 
@@ -111,7 +113,7 @@ def epanechnikov1D(u: Union[float, np.ndarray], epa_norm: float = 3 / 4.0) -> Un
     Returns:
         float or np.ndarray: Evaluated Epanechnikov kernel values.
     """
-    return epa_norm*(1 - u**2)*(abs(u) <= 1)*1.0
+    return epa_norm*(1 - u**2)*(np.abs(u) <= 1)*1.0
 
 def gen_epanechnikov2D_kernel(r2: int, INDEX: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
     """
@@ -149,7 +151,7 @@ class FlutDir:
         self.dir_span = 360
         self.center   = center
         k             = int(self.dir_span/(2*d_theta) - 0.5) + 1
-        self.d_theta  = self.dir_span/(2*k) # Make sure there are no remainder
+        self.d_theta  = self.dir_span/(2*k) 
         self.thetas   = [-k*self.d_theta + t*self.d_theta + self.center for t in range(0, 2*k+1)]    
         self.items    = [None]*len(self.thetas)
         self.dir_vec  = [linetools.calc_heading_vector(theta) for theta in self.thetas]

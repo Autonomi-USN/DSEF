@@ -24,6 +24,10 @@ def normalized(v: List[float]) -> np.ndarray:
     Returns:
         np.ndarray: The normalized vector with a magnitude of 1.
     """
+    if len(v) != 2:
+        raise ValueError(f"'v' should be a list of 2 float values. Input has size {len(v)}")
+    if not any(v):
+        raise ZeroDivisionError(f"Normalized value is 0!")
     norm = (v[0]**2 + v[1]**2)**0.5
     return np.array([v[0]/norm, v[1]/norm])
 
@@ -40,6 +44,8 @@ def normalvector(v: List[float], CC: bool = True, NORMALIZE: bool = True) -> np.
     Returns:
         np.ndarray: The computed normal vector.
     """
+    if len(v) != 2:
+        raise ValueError(f"'v' should be a list of 2 float values. Input has size {len(v)}")
     vx = [v[1], -v[0]] if CC else [-v[1], v[0]]
     if NORMALIZE:        
         return normalized(vx)
@@ -70,8 +76,10 @@ def calc_heading(heading_vec: Tuple[float]) -> float:
     Returns:
         float: The compass heading in degrees, ranging from 0° to 360°.
     """
+    if isinstance(heading_vec, str):
+        raise TypeError(f"Wrong type, it should be a tuple of 2 float values.")
     if len(heading_vec) != 2:
-        raise TypeError("heading_vec is not a Tuple of len 2")
+        raise ValueError(f"'heading_vec' should be a tuple of 2 float values. Input has size {len(heading_vec)}")
     ve, vn = heading_vec    
     return (np.degrees(np.arctan2(ve, vn)) + 360) % 360.0
 
@@ -85,18 +93,32 @@ class RunningExponentialVectorAverage:
         rho (float): The smoothing factor (0 < rho <= 1).
     """
     def __init__(self, mu: np.ndarray = np.array([0, 0]), var: np.ndarray = np.array([0, 0]), rho: float = 0.1):
+        if rho <= 0 or rho > 1:
+            raise ValueError("'rho' is out of the range 0 < rho <=1.")
+        var = np.asarray(var, dtype=float)
+        if var.shape != (2,):
+            raise ValueError(f"'var' must be a 2D vector of length 2, got shape {var.shape}")
+        mu = np.asarray(mu, dtype=float)
+        if mu.shape != (2,):
+            raise ValueError(f"'mu' must be a 2D vector of length 2, got shape {mu.shape}")
         self.mu, self.var, self.rho = mu, var, rho
 
-    def push(self, v: float) -> None:
+    def push(self, v: np.ndarray) -> None:
         """
         Add a new vector to update the mean and variance.
 
         Parameters:
             v (np.ndarray): A 2D vector to include in the running average.
         """
-        self.mu = self.rho*v + (1 - self.rho)*self.mu
-        d        = abs(v - self.mu)
-        self.var = (d**2)*self.rho + (1 - self.rho)*self.var
+        
+        v = np.asarray(v, dtype=float)
+
+        if v.shape != (2,):
+            raise ValueError(f"'v' must be a 2D vector of length 2, got shape {v.shape}")
+
+        self.mu = self.rho * v + (1 - self.rho) * self.mu
+        d = np.abs(v - self.mu)
+        self.var = self.rho * (d ** 2) + (1 - self.rho) * self.var
 
     def __repr__(self) -> str:
         return("REWA: mu = [%0.1f, %0.1f], var = [%0.1f, %0.1f], rho = %0.1f" % (self.mu[0], self.mu[1], self.var[0], self.var[1], self.rho))
