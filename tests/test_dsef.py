@@ -51,6 +51,10 @@ class TestDsef(unittest.TestCase):
         self.assertGreater(dtheta_high, dtheta_medium)
         self.assertGreater(dtheta_medium, dtheta_low)
 
+    @unittest.skip("TODO: handle dtheta with invalid speed")
+    def test_get_forced_dtheta_invalid_speed(self):
+        pass
+
     def test_calculate_steps(self):
         self.dsef.speed = "high"
         search_step_high, _ = self.dsef._calculate_steps()
@@ -62,6 +66,10 @@ class TestDsef(unittest.TestCase):
         self.assertGreater(search_step_medium, search_step_high)
         self.assertGreater(search_step_low, search_step_medium)
 
+    @unittest.skip("TODO: handle step with invalid speed")
+    def test_get_calculate_steps_invalid_speed(self):
+        pass
+
     def test_edge_search_no_edge(self):
         img = np.zeros((100, 100, 3), dtype=np.uint8)
         self.dsef.start_pixel = (0, 0)
@@ -69,6 +77,18 @@ class TestDsef(unittest.TestCase):
 
         edge_found, image = self.dsef.edge_search(img)
         self.assertFalse(edge_found)
+
+    @unittest.skip("TODO: test edge search")
+    def test_edge_search(self):
+        pass
+
+    @unittest.skip("TODO: test edge follow")
+    def test_edge_follow(self):
+        pass
+
+    @unittest.skip("TODO: handle edge follow without edge")
+    def test_edge_follow_no_edge(self):
+        pass
 
 
 if __name__ == '__main__':

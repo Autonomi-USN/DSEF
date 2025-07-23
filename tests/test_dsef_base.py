@@ -3,7 +3,6 @@ import numpy as np
 from unittest.mock import patch
 from dsef.dsef_base import DSEFBase
 import dsef.dsef_tools as dftools
-import cv2
 
 class TestDSEFBase(unittest.TestCase):
     
@@ -56,6 +55,12 @@ class TestDSEFBase(unittest.TestCase):
         with patch.object(dftools.FlutDir, 'get_span', return_value=([0, 45, 90], [0, 1, 2], [[1, 0], [0, 1], [-1, 0]])):
             direction, _ = self.dsef.find_best_direction()
             self.assertIn(direction, [0, 45, 90])
+
+    def test_find_best_direction_crazy_direction(self):        
+        self.dsef.u, self.dsef.v = 10, 10
+        with patch.object(dftools.FlutDir, 'get_span', return_value=([0, 0, 0], [0, 0, 0], [[1, 0], [0, 1], [1, 1]])):
+            direction, _ = self.dsef.find_best_direction()
+            self.assertEqual(direction, 0)
 
     def test_edge_follow_lost_edge(self):
         self.dsef.u, self.dsef.v = 10, 10
