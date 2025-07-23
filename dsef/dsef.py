@@ -42,6 +42,8 @@ class Dsef:
         self.width = 0
         self.height = 0
         self.E = None
+        self.edge_position = None
+        self.img_edged = None
 
     def edge_search(self, img: np.ndarray) -> Tuple[bool, np.ndarray]:
         """
@@ -53,10 +55,11 @@ class Dsef:
         Returns:
             Tuple[bool, np.ndarray]: Whether the edge was found and the resulting image.
         """
+        img_ = img.copy()
         # Image Load and Initialize DSEF
-        self._initialize_dsef(img)
+        self._initialize_dsef(img_)
         search_step, _ = self._calculate_steps()
-        edge_found, image = self._edge_search(search_step, img)
+        edge_found, image = self._edge_search(search_step, img_)
 
         return edge_found, image
 
@@ -71,9 +74,10 @@ class Dsef:
         Returns:
             Optional[List[Tuple[float, float]]]: List of edge coordinates if found, else None, and resulting image.
         """
+        img_ = img.copy()
         _, follower_step = self._calculate_steps()
         found_edge_line = None
-        found_edge_line, image = self._edge_follow(follower_step, img)        
+        found_edge_line, image = self._edge_follow(follower_step, img_)        
         
         return found_edge_line, image
 
@@ -165,7 +169,8 @@ class Dsef:
 
         Returns:
             Tuple[bool, np.ndarray]: Whether the edge was found and the resulting image.
-        """
+        """        
+        img_ = img.copy()
         start_x, start_y = self.start_pixel
         end_x, end_y = self.end_pixel
         v_dir = [end_x - start_x, end_y - start_y]
@@ -179,7 +184,6 @@ class Dsef:
         MAX_EDGE = 0
         u_edge, v_edge = start_x, start_y
         EDGE_FOUND = False
-        image = img
         while True:
             if not self.E.step(search_step * v_heading[0], search_step * v_heading[1]):
                 if self.debug:
@@ -187,16 +191,16 @@ class Dsef:
                 break
 
             ui, vi = self.E.get_pos()
-            image = cv2.circle(image,(int(ui),int(vi)),1,(0,0,0),-1)
+            img_ = cv2.circle(img_,(int(ui),int(vi)),3,(0,0,0),-1)
             T_FULL_main = dftools.dsef_test(self.E, self.E.u, self.E.v, self.E.edge_direction, FULL=True).FULL or 0
             if T_FULL_main > self.E.crit_edge:
                 if T_FULL_main > MAX_EDGE + self.E.crit_edge:
                     MAX_EDGE = T_FULL_main
                     u_edge, v_edge = ui, vi
-                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    img_ = cv2.circle(img_,(int(u_edge),int(v_edge)),3,(0,0,0),-1)
                 elif MAX_EDGE > 0 and T_FULL_main < MAX_EDGE - self.E.crit_edge:
                     self.E.move(u_edge, v_edge)
-                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    img_ = cv2.circle(img_,(int(u_edge),int(v_edge)),3,(0,0,0),-1)
                     EDGE_FOUND = True
                     if self.debug:
                         print("[DEBUG] Edge found. Breaking EdgeSearch.")
@@ -207,7 +211,10 @@ class Dsef:
                 if self.debug:
                     print("[DEBUG] We passed the end pixel => break EdgeSearch.")
                 break
-        return EDGE_FOUND, image
+        self.img_edged = img_.copy()
+        if EDGE_FOUND:
+            self.edge_position = (self.E.u, self.E.v, self.E.u_float, self.E.v_float)
+        return EDGE_FOUND, img_
 
     def _edge_follow(self, follower_step: int, img: np.ndarray) -> Tuple[List[Tuple[float,float]], np.ndarray]:
         """
@@ -220,9 +227,9 @@ class Dsef:
         Returns:
             Tuple[List[Tuple[float, float]], np.ndarray]: The found edge line and the resulting image.
         """
+        img_ = self.img_edged.copy()
         found_edge_line = []
-        
-        EDGE_FOUND, _, REWA, message, us, vs, arrow_list_follow, image = self.E.EdgeFollow(follower_step, img)
+        EDGE_FOUND, _, REWA, message, us, vs, arrow_list_follow, img_out = self.E.EdgeFollow(follower_step, img_, self.edge_position)
         
         if self.debug and message:
             print("[DEBUG] EdgeFollow message:", message)
@@ -236,94 +243,4 @@ class Dsef:
             y_end = y_start + 1000*follower_step * direction_vec[1]
             found_edge_line = [(x_start, y_start), (x_end, y_end)]
             
-        return found_edge_line, image
-
-        """ Patched EdgeFollow method using follower_step. 
-
-        Parameters:
-            follower_step (int): The follower step size.
-            img (np.ndarray): The input image.
-            MAX_ITT (int): maximum number of iterations.
-            Ntest_edge (int): number of tests for considering an edge
-
-        Returns:
-            Tuple[List[Tuple[float, float]], np.ndarray]: The found edge line and the resulting image.
-        """
-        print(self)
-        step = follower_step
-        sel_dirs, _, sel_dirvecs = self.E.DF.flut.get_span()
-        consec_edge, consec_no_edge = 0, 0
-        message = None
-        self.E.u_edge, self.E.v_edge = self.E.get_pos()
-        EDGE_FOUND, END_FOUND = False, False
-        ABORT_WHEN_ACCURATE = True 
-        REWA = linetools.RunningExponentialVectorAverage(var=np.array([2,2]), rho=0.1)
-
-        # pick best direction from current span
-        t1 = [dftools.dsef_test(self.E, self.E.u, self.E.v, d, FORWARD=True, FULL=True).FULL for d in sel_dirs]
-        ind_max = np.argmax(t1)
-        best_direction = sel_dirvecs[ind_max]
-        REWA.push(best_direction)
-
-        us_, vs_ = [], []
-        arrow_list_follow = []  # We'll store arrow info for each iteration
-        Nitt = 0
-
-        while Nitt < MAX_ITT:
-            Nitt += 1
-            ui, vi = self.E.get_pos()
-            image = cv2.circle(img,(int(ui),int(vi)),1,(128,128,128),-1)
-            us_.append(ui)
-            vs_.append(vi)
-
-            # forward test for each direction
-            t_ = [dftools.dsef_test(self.E, self.E.u, self.E.v, d, FORWARD=True, FULL=True).FULL for d in sel_dirs]
-            ind_max = np.argmax(t_)
-            if t_[ind_max] < t_[len(sel_dirs)//2] + self.E.crit_edge:
-                ind_max = len(sel_dirs)//2
-            v = sel_dirvecs[ind_max]
-            T_ALL = dftools.dsef_test(self.E, self.E.u, self.E.v, sel_dirs[ind_max], ALL=True).ALL
-            if T_ALL is None:
-                T_ALL = []
-            ALL_EDGE = np.all(np.array(T_ALL) > self.E.crit_edge)
-
-            # e.g. store direction & T_FORWARD in arrow_list_follow
-            arrow_list_follow.append([
-                (d, t_val if t_val is not None else 0.0)
-                for d, t_val in zip(sel_dirs, t_)
-            ])
-
-            if ALL_EDGE:
-                consec_edge = min(consec_edge+1, Ntest_edge)
-                consec_no_edge = 0
-            else:
-                consec_edge = max(0, consec_edge-1)
-                consec_no_edge += 1
-
-            if consec_no_edge >= 2*self.E.DF.N + 1:
-                message = "CANCEL. WE LOST THE EDGE"
-                break
-
-            if consec_edge >= Ntest_edge:
-                if not EDGE_FOUND:
-                    self.E.u_edge, self.E.v_edge = self.E.get_pos()
-                    EDGE_FOUND = True
-                REWA.push(v)
-                mu_direction = self.E.DF.flut.wrap_angle(linetools.calc_heading(REWA.mu))
-                var_direction = REWA.var[0]**2 
-                var_direction = np.degrees(np.arctan(REWA.var[1]/(1+REWA.var[0])))
-
-                if var_direction > self.E.DF.flut.d_theta:
-                    self.E.DF.flut.set_span(mu_direction, 4*var_direction**0.5)
-                    sel_dirs, sel_items, sel_dirvecs = self.E.DF.flut.get_span()
-                elif ABORT_WHEN_ACCURATE:
-                    message = ("ABORTING. Edge direction +/- %.1f deg" 
-                                % (var_direction**0.5))
-                    break
-
-            # move filter forward
-            if not self.E.step(v[0]*step, v[1]*step):
-                message = "we reached END of image"
-                break
-
-        return EDGE_FOUND, END_FOUND, REWA, message, us_, vs_, arrow_list_follow, image
+        return found_edge_line, img_out

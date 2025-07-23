@@ -7,6 +7,8 @@ The base class of DSEF
 import math
 import numpy as np
 import cv2
+import copy
+from typing import Optional
 import dsef.line_tools as linetools
 import dsef.dsef_tools as dftools
 
@@ -157,6 +159,7 @@ class DSEFBase:
                 position (tuple): The final position of the filter in unpadded coordinates.
                 image (np.ndarray): The updated image with circles marking the edge positions.
         """
+        img_ = img.copy()
         # Step along profile until edge is found, or end of profile/image is reached
         step = (self.DF.radius + min(self.DF.bu, self.DF.bv))
 
@@ -171,14 +174,12 @@ class DSEFBase:
         MAX_EDGE = 0
         v = v_dir
 
-        image = img
-
         while v_heading[0]*v[0] + v_heading[1]*v[1] > 0:       # until we have passed the stop point
             
             if not self.step(step*v_heading[0], step*v_heading[1]):
                 break
             u_new, v_new = self.get_pos()
-            image = cv2.circle(image,(int(u_new),int(v_new)),1,(0,0,0),-1)
+            img_ = cv2.circle(img_,(int(u_new),int(v_new)),3,(0,0,0),-1)
             
             if OPTIMIZE_SEARCH_DIRECTION:
                 self.edge_direction = self.find_best_direction()
@@ -191,19 +192,19 @@ class DSEFBase:
                 if T_FULL > MAX_EDGE + self.crit_edge:
                     MAX_EDGE = T_FULL
                     u_edge, v_edge = u_new, v_new
-                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    img_ = cv2.circle(img_,(int(u_edge),int(v_edge)),3,(0,0,0),-1)
                 elif MAX_EDGE > 0 and T_FULL < MAX_EDGE - self.crit_edge:
                     # Edge found !!!
                     self.move(u_edge, v_edge)                    
-                    image = cv2.circle(image,(int(u_edge),int(v_edge)),1,(0,0,0),-1)
+                    img_ = cv2.circle(img_,(int(u_edge),int(v_edge)),3,(0,0,0),-1)
                     break
                 
             # Calculate vector from current position to end of profile
             v = [stop[0]-u_new, stop[1]-v_new]  
-            image = cv2.circle(image,(int(u_edge),int(v_edge)),3,(0,0,0),-1)      
-        return EDGE, self.get_pos(), image
+            img_ = cv2.circle(img_,(int(u_edge),int(v_edge)),4,(0,0,0),-1)      
+        return EDGE, self.get_pos(), img_
     
-    def EdgeFollow(self, follower_step: float, img: np.ndarray, MAX_ITT: int = 1000, Ntest_edge: int = 2):
+    def EdgeFollow(self, follower_step: float, img: np.ndarray, edge_position: Optional[tuple] = None, MAX_ITT: int = 1000, Ntest_edge: int = 2):
         """ 
         Follow edge until end of line, or image boundary, or maximum number of iterations reached.
 
@@ -216,10 +217,14 @@ class DSEFBase:
         Returns:
             Tuple[List[Tuple[float, float]], np.ndarray]: The found edge line and the resulting image.
         """
+        img_ = img.copy()
         step = follower_step
-        sel_dirs, _, sel_dirvecs = self.DF.flut.get_span()
+        df = copy.deepcopy(self.DF)
+        sel_dirs, _, sel_dirvecs = df.flut.get_span()
         consec_edge, consec_no_edge = 0, 0
         message = None
+        if edge_position:
+            self.u, self.v, self.u_float, self.v_float = edge_position
         self.u_edge, self.v_edge = self.get_pos()
         EDGE_FOUND, END_FOUND = False, False
         ABORT_WHEN_ACCURATE = True 
@@ -231,16 +236,15 @@ class DSEFBase:
         best_direction = sel_dirvecs[ind_max]
         REWA.push(best_direction)
 
+        
         us_, vs_ = [], []
         arrow_list_follow = []  # We'll store arrow info for each iteration
         Nitt = 0
 
-        image = img
-
         while Nitt < MAX_ITT:
             Nitt += 1
             ui, vi = self.get_pos()
-            image = cv2.circle(image,(int(ui),int(vi)),1,(128,128,128),-1)
+            img_ = cv2.circle(img_,(int(ui),int(vi)),3,(128,128,128),-1)
             us_.append(ui)
             vs_.append(vi)
 
@@ -254,46 +258,41 @@ class DSEFBase:
             if T_ALL is None:
                 T_ALL = []
             ALL_EDGE = np.all(np.array(T_ALL) > self.crit_edge)
-
             # e.g. store direction & T_FORWARD in arrow_list_follow
             arrow_list_follow.append([
                 (d, t_val if t_val is not None else 0.0)
                 for d, t_val in zip(sel_dirs, t_)
             ])
-
             if ALL_EDGE:
                 consec_edge = min(consec_edge+1, Ntest_edge)
                 consec_no_edge = 0
             else:
                 consec_edge = max(0, consec_edge-1)
                 consec_no_edge += 1
-
-            if consec_no_edge >= 2*self.DF.N + 1:
+            if consec_no_edge >= 2*df.N + 1:
                 message = "CANCEL. WE LOST THE EDGE"
                 break
-
             if consec_edge >= Ntest_edge:
                 if not EDGE_FOUND:
                     self.u_edge, self.v_edge = self.get_pos()
                     EDGE_FOUND = True
                 REWA.push(v)
-                mu_direction = self.DF.flut.wrap_angle(linetools.calc_heading(REWA.mu))
+                mu_direction = df.flut.wrap_angle(linetools.calc_heading(REWA.mu))
                 var_direction = REWA.var[0]**2 
                 var_direction = np.degrees(np.arctan(REWA.var[1]/(1+REWA.var[0])))
 
-                if var_direction > self.DF.flut.d_theta:
-                    self.DF.flut.set_span(mu_direction, 4*var_direction**0.5)
-                    sel_dirs, sel_items, sel_dirvecs = self.DF.flut.get_span()
+                if var_direction > df.flut.d_theta:
+                    df.flut.set_span(mu_direction, 4*var_direction**0.5)
+                    sel_dirs, sel_items, sel_dirvecs = df.flut.get_span()
                 elif ABORT_WHEN_ACCURATE:
                     message = ("ABORTING. Edge direction +/- %.1f deg" 
                                 % (var_direction**0.5))
                     break
-
+                
             # move filter forward
             if not self.step(v[0]*step, v[1]*step):
                 message = "we reached END of image"
                 END_FOUND = True
                 break
-            
-        return EDGE_FOUND, END_FOUND, REWA, message, us_, vs_, arrow_list_follow, image
+        return EDGE_FOUND, END_FOUND, REWA, message, us_, vs_, arrow_list_follow, img_
     
