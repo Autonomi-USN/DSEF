@@ -29,6 +29,24 @@ To cite DSEF in your research, please cite as:
 
 ```
 
+## Speeds
+
+The DSEF can work in three modes, or speeds, are described in the table below:
+
+| **Parameter**                     | **Low**             | **Medium**          | **High**            |
+| --------------------------------- | ------------------- | ------------------- | ------------------- |
+| $\Delta s$ _(EdgeSearch step)_    | dist⁄80             | dist⁄60             | dist⁄40             |
+| $\Delta \ell$ _(EdgeFollow step)_ | diag⁄200            | diag⁄100            | diag⁄50             |
+| $\Delta \theta$ _(Angle Res.)_    | $\Omega$⁄90         | 4 $\Omega$⁄90       | 10 $\Omega$⁄90      |
+| $N_{\theta}$ _(LUT size)_         | 360⁄$\Delta \theta$ | 360⁄$\Delta \theta$ | 360⁄$\Delta \theta$ |
+
+Where $\mathrm{dist} = \sqrt{(u_{\mathrm{end}}-u_{\mathrm{start}})^2 + 
+(v_{\mathrm{end}}-v_{\mathrm{start}})^2}$ and $\mathrm{diag} = \sqrt{(\mathrm{Width})^2 + (\mathrm{Height})^2}$
+
+Lower speeds have more accuracy, due to the smaller steps, and higher speeds can have less accuracy but are faster.
+
+More about speeds can be found in [this example](https://github.com/Autonomi-USN/DSEF/blob/main/docs/Speeds.ipynb).
+
 ## How to use
 
 Simple Implementation of DSEF Code to search for the closest line in an example image. Full example can be seen [here](https://github.com/Autonomi-USN/DSEF/blob/main/docs/Simple-DSEF.ipynb).
