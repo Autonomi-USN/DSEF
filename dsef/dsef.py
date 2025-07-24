@@ -64,7 +64,7 @@ class Dsef:
         return edge_found, image
 
 
-    def edge_follow(self, img: np.ndarray) -> Optional[Tuple[List[Tuple[float, float]],np.ndarray]]:
+    def edge_follow(self) -> Optional[Tuple[List[Tuple[float, float]],np.ndarray]]:
         """
         Run the DSEF algorithm.
 
@@ -74,10 +74,9 @@ class Dsef:
         Returns:
             Optional[List[Tuple[float, float]]]: List of edge coordinates if found, else None, and resulting image.
         """
-        img_ = img.copy()
         _, follower_step = self._calculate_steps()
         found_edge_line = None
-        found_edge_line, image = self._edge_follow(follower_step, img_)        
+        found_edge_line, image = self._edge_follow(follower_step)        
         
         return found_edge_line, image
 
@@ -216,7 +215,7 @@ class Dsef:
             self.edge_position = (self.E.u, self.E.v, self.E.u_float, self.E.v_float)
         return EDGE_FOUND, img_
 
-    def _edge_follow(self, follower_step: int, img: np.ndarray) -> Tuple[List[Tuple[float,float]], np.ndarray]:
+    def _edge_follow(self, follower_step: int) -> Tuple[List[Tuple[float,float]], np.ndarray]:
         """
         Execute the EdgeFollow phase of the algorithm.
 
