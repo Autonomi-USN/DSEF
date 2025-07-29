@@ -2,7 +2,7 @@
 Direct Step Edge Follower package
 """
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__ = 'Agnar Sivertsen, Fabio Andrade, Marcos Moura'
 __email__ = 'agsi@norceresearch.no, fabio@ieee.org, marcos.moura@usn.no'
 __license__ = 'MIT'
