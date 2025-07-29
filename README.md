@@ -50,4 +50,5 @@ Lower speeds have more accuracy, due to the smaller steps, and higher speeds can
 The examples of DSEF can be found in the following links:
 
 [Simple Implementation of DSEF Search and Follow](https://github.com/Autonomi-USN/DSEF/blob/main/docs/Simple-DSEF.ipynb)
+
 [Implementation and Comparison between the different Speed Modes in DSEF](https://github.com/Autonomi-USN/DSEF/blob/main/docs/Speeds.ipynb)
